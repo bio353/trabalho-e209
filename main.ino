@@ -43,12 +43,12 @@ void setup()
     DDRD |= PwmOut;
     PORTD &= ~PwmOut;
 
-    // Não servem pra nada (provavelmente)
+    // Configura o Timer PWM
     TCCR0A |= (1 << WGM01) | (1 << WGM00) | (1 << COM0B1);
     TCCR0B = (1 << CS00);
     OCR0B = 0;
 
-    // H
+    // Habilita resistor de pull-up no PD2
     PORTD |= FREIO;
 
     // Habilita UART
