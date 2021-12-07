@@ -5,8 +5,9 @@
 #define BAUD 9600
 #define MYUBRR FOSC / 16 / BAUD - 1
 
-#define FREIO (1 << PD2)
 #define PwmOut (1 << PD5)
+#define FREIO (1 << PD2)
+#define FREIANDO (PIND & FREIO) == 0
 
 char msg_tx[20];
 char msg_rx[32];
@@ -19,7 +20,7 @@ unsigned char pwm;
 u16 adc_result0;
 
 // Prototipo das Funcoes ADC
-int ADC_read(u8 ch);
+int ADC_Read(u8 ch);
 
 // Prototipos das Outras Funcoes
 void UART_Init(unsigned int ubrr);
@@ -38,22 +39,29 @@ ISR(USART_RX_vect)
 
 void setup()
 {
+    // Define entradas e saidas
     DDRD |= PwmOut;
     PORTD &= ~PwmOut;
 
+    // Não servem pra nada (provavelmente)
     TCCR0A |= (1 << WGM01) | (1 << WGM00) | (1 << COM0B1);
     TCCR0B = (1 << CS00);
     OCR0B = 0;
 
+    // H
     PORTD |= FREIO;
 
+    // Habilita UART
     UART_Init(MYUBRR);
 
+    // Habilita interrupcao externa global
     sei();
 
+    // Habilita ADC
     ADMUX = (1 << REFS0);
     ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 
+    // Inicializa 'velocidade'
     velocidade = 0;
 }
 
@@ -64,6 +72,7 @@ void loop()
     {
         if (msg_rx[0] == 'L' || msg_rx[0] == 'l')
         {
+            // Liga o sistema
             velocidade = 0;
             OCR0B = 0;
 
@@ -77,6 +86,7 @@ void loop()
     {
         if (msg_rx[0] == 'D' || msg_rx[0] == 'd')
         {
+            // Desliga o sistema
             velocidade = 0;
             OCR0B = 0;
             UART_Transmit("Sistema Desligado\n");
@@ -84,30 +94,28 @@ void loop()
         }
         else if (msg_rx[0] == 'V' || msg_rx[0] == 'v')
         {
+            // Mostra 'velocidade'
             UART_Transmit("Velocidade: ");
             itoa(velocidade, msg_tx, 10);
             UART_Transmit(msg_tx);
             UART_Transmit("\n");
 
-            // _delay_ms(500); // Aguarda um tempo para evitar o bounce
-
             msg_rx[0] = 'n';
         }
-        else if ((PIND & FREIO) == 0)
+        else if (FREIANDO)
         {
-            // UART_Transmit("Freio Pressionado\n");
             velocidade = 0;
             OCR0B = 0;
         }
         else
         {
-            // UART_Transmit("Flag\n");
-            adc_result0 = ADC_read(ADC0D);
+            // Converte o valor lido
+            adc_result0 = ADC_Read(ADC0D);
             _delay_ms(50);
             pwm = adc_result0 * 0.2493;
             OCR0B = pwm;
-            // _delay_ms(1000);
 
+            // Passa o valor p/ 'velocidade'
             aux = (long)adc_result0 * 280;
             aux /= 1023;
             velocidade = (unsigned int)aux;
@@ -140,11 +148,11 @@ void UART_Init(unsigned int ubrr)
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
 }
 
-int ADC_read(u8 ch)
+int ADC_Read(u8 ch)
 {
     char i;
     int ADC_temp = 0;
-    int ADC_read = 0;
+    int ADC_Read = 0;
     ch &= 0x07;
     ADMUX = (ADMUX & 0xF8) | ch;
     ADCSRA |= (1 << ADSC);
@@ -157,8 +165,8 @@ int ADC_read(u8 ch)
             ;
         ADC_temp = ADCL;
         ADC_temp += (ADCH << 8);
-        ADC_read += ADC_temp;
+        ADC_Read += ADC_temp;
     }
-    ADC_read = ADC_read >> 3;
-    return ADC_read;
+    ADC_Read = ADC_Read >> 3;
+    return ADC_Read;
 }
