@@ -58,7 +58,7 @@ void setup()
     // Habilita interrupcao externa global
     sei();
 
-    // Habilita ADC
+    // Inicializa ADC
     ADC_Init();
 }
 
