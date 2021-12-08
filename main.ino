@@ -120,6 +120,17 @@ void loop()
     }
 }
 
+void UART_Init(unsigned int ubrr)
+{
+    // Configura a baud rate
+    UBRR0H = (unsigned char)(ubrr >> 8);
+    UBRR0L = (unsigned char)ubrr;
+    // Habilita a recepcao, tranmissao e interrupcao na recepcao
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+    // Configura o formato da mensagem: 8 bits de dados e 1 bits de parada
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+}
+
 void UART_Transmit(char *dados)
 {
     // Envia todos os caracteres do buffer dados ate chegar um final de linha
@@ -132,17 +143,6 @@ void UART_Transmit(char *dados)
         // Passa para o próximo caractere do buffer dados
         dados++;
     }
-}
-
-void UART_Init(unsigned int ubrr)
-{
-    // Configura a baud rate
-    UBRR0H = (unsigned char)(ubrr >> 8);
-    UBRR0L = (unsigned char)ubrr;
-    // Habilita a recepcao, tranmissao e interrupcao na recepcao
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-    // Configura o formato da mensagem: 8 bits de dados e 1 bits de parada
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
 }
 
 void ADC_Init()
