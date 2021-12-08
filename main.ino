@@ -20,6 +20,7 @@ unsigned char pwm;
 u16 adc_result0;
 
 // Prototipo das Funcoes ADC
+void ADC_Init();
 int ADC_Read(u8 ch);
 
 // Prototipos das Outras Funcoes
@@ -58,11 +59,7 @@ void setup()
     sei();
 
     // Habilita ADC
-    ADMUX = (1 << REFS0);
-    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
-
-    // Inicializa 'velocidade'
-    velocidade = 0;
+    ADC_Init();
 }
 
 void loop()
@@ -146,6 +143,12 @@ void UART_Init(unsigned int ubrr)
     UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
     // Configura o formato da mensagem: 8 bits de dados e 1 bits de parada
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+}
+
+void ADC_Init()
+{
+    ADMUX = (1 << REFS0);
+    ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 }
 
 int ADC_Read(u8 ch)
